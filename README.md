@@ -1,16 +1,153 @@
---[[
-    This script has been licensed using Luarmor
-      Luarmor v3.8b, Lua whitelisting system
-            https://luarmor.net/
-
-      _   _       _   _ _   _          _   ____            _                ____                        _____              
-     | | | |_ __ | |_(_) |_| | ___  __| | | __ )  _____  _(_)_ __   __ _   / ___| __ _ _ __ ___   ___  |  ___| __ ___  ___ 
-     | | | | '_ \| __| | __| |/ _ \/ _` | |  _ \ / _ \ \/ / | '_ \ / _` | | |  _ / _` | '_ ` _ \ / _ \ | |_ | '__/ _ \/ _ \
-     | |_| | | | | |_| | |_| |  __/ (_| | | |_) | (_) >  <| | | | | (_| | | |_| | (_| | | | | | |  __/ |  _|| | |  __/  __/
-      \___/|_| |_|\__|_|\__|_|\___|\__,_| |____/ \___/_/\_\_|_| |_|\__, |  \____|\__,_|_| |_| |_|\___| |_|  |_|  \___|\___|
-                                                                   |___/                                                   
-
-
-]]
-
-local a="This file is licensed with Luarmor. You must use the actual loadstring to execute this script. Do not run this file directly. Always use the loadstring."local b="b4721b415e0750ea8541c465f4e0969e"if lrm_load_script then lrm_load_script(b)while wait(1)do end end;local c="https://api.luarmor.net/files/v3/l/"..b..".lua"is_from_loader={Mode="fastload"}local d=0.03;l_fastload_enabled=function(e)if e=="flush"then wait(d)d=d+2;local f,g;local h,i=pcall(function()g=game:HttpGet(c)pcall(writefile,b.."-cache.lua","-- "..a.."\n\n if not is_from_loader then warn('Use the loadstring, do not run this directly') return end;\n "..g)wait(0.1)f=loadstring(g)end)if not h or not f then pcall(writefile,"lrm-err-loader-log-httpresp.txt",tostring(g))warn("Error while executing loader. Err:"..tostring(i).." See lrm-err-loader-log-httpresp.txt in your workspace.")return end;f(is_from_loader)end;if e=="rl"then pcall(writefile,b.."-cache.lua","recache required")wait(0.2)pcall(delfile,b.."-cache.lua")end end;local j;local k,l=pcall(function()j=readfile(b.."-cache.lua") if (not j) or (#j < 5) then j=nil; return; end; j=loadstring(j)end)if not k or not j then l_fastload_enabled("flush")return end;j(is_from_loader)
+-- Script Description:
+-- This script is designed for use in Roblox games and manipulates players' positions using client-sided CFrame adjustments.
+-- It allows you to move players to a specified range in front of your character and set their walk speed to 0.
+-- what does this mean it mean like you can use tool and thing for example you have sword and gun in game Which this script made for Manipulate Hitbox client sided
+-- you can use those tool to Damage/hit/kill player that Bringed to you
+--even though this script is client sided but even is client sided other player can still see themselves died/Hitted/damaged
+-- This may not work in games with robust anti-cheat systems or hitbox checks.
+ 
+-- Setting
+local range = -10  -- Adjust how far players are brought in front of you. Use negative values to bring them closer.
+ 
+-- Variables
+local localplayer = game.Players.LocalPlayer
+local localcharacter = localplayer.Character or localplayer.CharacterAdded:Wait()
+local localroot = localcharacter:WaitForChild("HumanoidRootPart")
+local localhumanoid = localcharacter:WaitForChild("Humanoid")
+ 
+-- Load Orion Library and create GUI
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
+local Window = OrionLib:MakeWindow({
+    Name = "FE Kill All Script GUI v3",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest"
+})
+ 
+-- Create tabs and sections
+local Tab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+ 
+local Section = Tab:AddSection({
+    Name = "Section Script"
+})
+ 
+-- State Variables
+local FEKillAllToggle = false
+local FEKillAllWithTeamCheckToggle = false
+local FETargetPlayer = false
+ 
+-- Function to update local character references
+local function updateLocalCharacter()
+    localcharacter = localplayer.Character or localplayer.CharacterAdded:Wait()
+    localroot = localcharacter:WaitForChild("HumanoidRootPart")
+    localhumanoid = localcharacter:WaitForChild("Humanoid")
+end
+ 
+-- Update character references on respawn
+localplayer.CharacterAdded:Connect(function()
+    updateLocalCharacter()
+    FEKillAllToggle = false
+    FEKillAllWithTeamCheckToggle = false
+    FETargetPlayer = false
+end)
+ 
+-- Add "FE kill all" toggle
+Tab:AddToggle({
+    Name = "FE Kill All Toggle",
+    Default = false,
+    Callback = function(state)
+        FEKillAllToggle = state
+        if FEKillAllToggle then
+            coroutine.wrap(function()
+                while FEKillAllToggle do
+                    for _, v in pairs(game.Players:GetPlayers()) do
+                        if v ~= localplayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") then
+                            local vroot = v.Character:FindFirstChild("HumanoidRootPart")
+                            local vhumanoid = v.Character:FindFirstChild("Humanoid")
+                            if vroot and localhumanoid.Health > 0 and vhumanoid.Health > 0 then
+                                vroot.CFrame = localroot.CFrame * CFrame.new(0, 0, range)
+                                vhumanoid.WalkSpeed = 0
+                            end
+                        end
+                    end
+                    game:GetService("RunService").RenderStepped:Wait()
+                end
+            end)()
+        end
+    end
+})
+ 
+-- Add "FE kill all with team check" toggle
+Tab:AddToggle({
+    Name = "FE Kill All (With Team Check)",
+    Default = false,
+    Callback = function(state)
+        FEKillAllWithTeamCheckToggle = state
+        if FEKillAllWithTeamCheckToggle then
+            coroutine.wrap(function()
+                while FEKillAllWithTeamCheckToggle do
+                    for _, v in pairs(game.Players:GetPlayers()) do
+                        if v ~= localplayer and v.Team ~= localplayer.Team and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") then
+                            local vroot = v.Character:FindFirstChild("HumanoidRootPart")
+                            local vhumanoid = v.Character:FindFirstChild("Humanoid")
+                            if vroot and localhumanoid.Health > 0 and vhumanoid.Health > 0 then
+                                vroot.CFrame = localroot.CFrame * CFrame.new(0, 0, range)
+                                vhumanoid.WalkSpeed = 0
+                            end
+                        end
+                    end
+                    game:GetService("RunService").RenderStepped:Wait()
+                end
+            end)()
+        end
+    end
+})
+ 
+-- Create player dropdown and populate with players
+local playerTable = {}
+for _, v in pairs(game.Players:GetPlayers()) do
+    if v.Name and v.Name ~= localplayer.Name and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") then
+        table.insert(playerTable, v.Name)
+    end
+end
+ 
+local selectedPlayer = nil
+Tab:AddDropdown({
+    Name = "Select Player to Target",
+    Default = "",
+    Options = playerTable,
+    Callback = function(Value)
+        selectedPlayer = Value
+    end
+})
+ 
+-- Add "Target Selected Player" toggle
+Tab:AddToggle({
+    Name = "Target Selected Player",
+    Default = false,
+    Callback = function(state)
+        FETargetPlayer = state
+        if FETargetPlayer and selectedPlayer then
+            coroutine.wrap(function()
+                while FETargetPlayer and selectedPlayer do
+                    local Target = game.Players:FindFirstChild(selectedPlayer)
+                    if Target and Target.Character then
+                        local Targetroot = Target.Character:FindFirstChild("HumanoidRootPart")
+                        local TargetHumanoid = Target.Character:FindFirstChild("Humanoid")
+                        if Targetroot and localhumanoid.Health > 0 and TargetHumanoid.Health > 0 then
+                            Targetroot.CFrame = localroot.CFrame * CFrame.new(0, 0, range)
+                            TargetHumanoid.WalkSpeed = 0
+                        end
+                    end
+                    game:GetService("RunService").RenderStepped:Wait()
+                end
+            end)()
+        else
+            FETargetPlayer = false
+        end
+    end
+})
